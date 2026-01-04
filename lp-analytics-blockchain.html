@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEPE/XNT Pool Analytics - Blockchain Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-green: #00ff88;
+            --neon-blue: #00d4ff;
+            --neon-pink: #ff00ff;
+            --dark-bg: #0a0e1a;
+            --card-bg: #151b2e;
+            --border-color: rgba(0, 255, 136, 0.2);
+            --text-primary: #e8f4f0;
+            --text-secondary: #7a8fa8;
+            --grid-color: rgba(0, 212, 255, 0.1);
+            --buy-color: #00ff88;
+            --sell-color: #ff0055;
+        }
+
+        body {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 5px rgba(0, 255, 136, 0.5)); }
+            to { filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.8)); }
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-blue));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-card:hover {
+            border-color: var(--neon-green);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(0, 255, 136, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--neon-green);
+            margin-bottom: 8px;
+        }
+
+        .stat-subtext {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 40px;
+            animation: fadeIn 1.2s ease-out 0.6s both;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+        }
+
+        .chart-wrapper.small {
+            height: 300px;
+        }
+
+        /* Live Trades Feed */
+        .trades-feed {
+            max-height: 400px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--neon-green) var(--card-bg);
+        }
+
+        .trades-feed::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .trades-feed::-webkit-scrollbar-track {
+            background: var(--card-bg);
+        }
+
+        .trades-feed::-webkit-scrollbar-thumb {
+            background: var(--neon-green);
+            border-radius: 4px;
+        }
+
+        .trade-item {
+            padding: 16px;
+            margin-bottom: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 3px solid var(--neon-green);
+            transition: all 0.3s ease;
+        }
+
+        .trade-item.buy {
+            border-left-color: var(--buy-color);
+        }
+
+        .trade-item.sell {
+            border-left-color: var(--sell-color);
+        }
+
+        .trade-item:hover {
+            background: rgba(0, 255, 136, 0.05);
+            transform: translateX(4px);
+        }
+
+        .trade-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .trade-type {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .trade-type.buy {
+            color: var(--buy-color);
+        }
+
+        .trade-type.sell {
+            color: var(--sell-color);
+        }
+
+        .trade-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .trade-details {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .trade-amount {
+            color: var(--neon-green);
+            font-weight: 500;
+        }
+
+        .connection-status {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-bottom: 16px;
+        }
+
+        .connection-status.connected {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .connection-status.disconnected {
+            border-color: var(--sell-color);
+            color: var(--sell-color);
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            animation: fadeIn 1.5s ease-out 1s both;
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            padding: 12px 20px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .refresh-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--neon-green);
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @media (max-width: 968px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="refresh-indicator">
+        <div class="refresh-dot"></div>
+        <span id="lastUpdate">LIVE DATA</span>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>PEPE/XNT Pool</h1>
+            <p class="subtitle">Blockchain Analytics Dashboard</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Liquidity (XNT)</div>
+                <div class="stat-value" id="totalXNT">--</div>
+                <div class="stat-subtext">WXNT Token Reserve</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Liquidity (PEPE)</div>
+                <div class="stat-value" id="totalPEPE">--</div>
+                <div class="stat-subtext">PEPE Token Reserve</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Current Price</div>
+                <div class="stat-value" id="currentPrice">--</div>
+                <div class="stat-subtext">XNT per PEPE</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Market Cap</div>
+                <div class="stat-value" id="marketCap">--</div>
+                <div class="stat-subtext">Based on 69.42B Supply</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">24h Volume</div>
+                <div class="stat-value" id="volume24h">--</div>
+                <div class="stat-subtext" id="volumeSubtext">XNT Traded</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Trades</div>
+                <div class="stat-value" id="totalTrades">--</div>
+                <div class="stat-subtext"><span id="buyCount">--</span> Buys · <span id="sellCount">--</span> Sells</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">LP Token Holders</div>
+                <div class="stat-value" id="holders">--</div>
+                <div class="stat-subtext">Liquidity Providers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last Trade</div>
+                <div class="stat-value" id="lastTradePrice">--</div>
+                <div class="stat-subtext" id="lastTradeTime">--</div>
+                <div class="stat-subtext" style="margin-top: 4px; color: var(--neon-blue);">
+                    👤 <span id="lastTrader">--</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-container">
+            <div class="chart-card full-width">
+                <h3 class="chart-title">Live Price Chart</h3>
+                <div class="chart-wrapper">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h3 class="chart-title">🔴 Live Trades Feed</h3>
+                <div class="connection-status" id="connectionStatus">Connecting...</div>
+                <div class="trades-feed" id="tradesFeed">
+                    <div class="loading-message">Connecting to blockchain...</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Real-time blockchain analytics for PEPE/XNT on X1 Blockchain</p>
+            <p style="margin-top: 10px; font-size: 0.75rem;">
+                📡 Data Source: Direct Blockchain via RPC | 
+                Pool: VmZfZnHzFTKSf19ZvAxa4duzChve3JYHVCPq1FvezhN
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // ============================================================================
+        // CONFIGURATION
+        // ============================================================================
+        
+        // Backend URL - this will work whether you open the file directly or serve it
+        const BACKEND_URL = window.location.protocol === 'file:' 
+            ? 'http://localhost:3000' 
+            : window.location.origin;
+        
+        const POOL_API_URL = 'https://api.xdex.xyz/api/xendex/pool/VmZfZnHzFTKSf19ZvAxa4duzChve3JYHVCPq1FvezhN';
+        const TOTAL_SUPPLY = 69_420_000_000;
+        const EXPLORER_BASE = 'https://explorer.mainnet.x1.xyz';
+        
+        console.log('🔧 Configuration:');
+        console.log('   Backend URL:', BACKEND_URL);
+        console.log('   Protocol:', window.location.protocol);
+        console.log('   Stream URL:', `${BACKEND_URL}/api/trades-stream`);
+        
+        // State
+        let priceChart = null;
+        let trades = [];
+        let priceData = [];
+        let eventSource = null;
+        
+        // Stats
+        let stats = {
+            buys: 0,
+            sells: 0,
+            buyVolume: 0,
+            sellVolume: 0,
+            lastTradePrice: 0,
+            lastTradeTime: null,
+            lastTrader: null
+        };
+        
+        // ============================================================================
+        // UTILITY FUNCTIONS
+        // ============================================================================
+        
+        function formatNumber(num, decimals = 2) {
+            if (!num || num === 0) return '--';
+            if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(decimals) + 'B';
+            if (num >= 1_000_000) return (num / 1_000_000).toFixed(decimals) + 'M';
+            if (num >= 1_000) return (num / 1_000).toFixed(decimals) + 'K';
+            return num.toFixed(decimals);
+        }
+
+        function formatPrice(price) {
+            if (!price || price === 0) return '--';
+            if (price < 0.000001) return price.toExponential(4);
+            if (price < 0.001) return price.toFixed(9);
+            return price.toFixed(6);
+        }
+        
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        // ============================================================================
+        // CHART INITIALIZATION
+        // ============================================================================
+        
+        function initPriceChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Price (XNT per PEPE)',
+                        data: [],
+                        borderColor: 'rgba(0, 255, 136, 1)',
+                        backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: 'rgba(0, 255, 136, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#151b2e',
+                            titleColor: '#e8f4f0',
+                            bodyColor: '#7a8fa8',
+                            borderColor: 'rgba(0, 255, 136, 0.2)',
+                            borderWidth: 1,
+                            padding: 12,
+                            bodyFont: {
+                                family: 'IBM Plex Mono'
+                            },
+                            callbacks: {
+                                label: (context) => {
+                                    return 'Price: ' + formatPrice(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 212, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#7a8fa8',
+                                font: {
+                                    family: 'IBM Plex Mono',
+                                    size: 10
+                                },
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(0, 212, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(0, 255, 136, 1)',
+                                font: {
+                                    family: 'IBM Plex Mono',
+                                    size: 10
+                                },
+                                callback: (value) => formatPrice(value)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // ============================================================================
+        // POOL DATA FETCHING
+        // ============================================================================
+        
+        async function fetchPoolData() {
+            try {
+                const response = await fetch(POOL_API_URL);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const data = result.data;
+                    const xnt = parseFloat(data.amount1) || 0;
+                    const pepe = parseFloat(data.amount2) || 0;
+                    const price = xnt / pepe;
+                    const marketCap = price * TOTAL_SUPPLY;
+                    
+                    document.getElementById('totalXNT').textContent = formatNumber(xnt);
+                    document.getElementById('totalPEPE').textContent = formatNumber(pepe);
+                    document.getElementById('currentPrice').textContent = formatPrice(price);
+                    document.getElementById('marketCap').textContent = formatNumber(marketCap) + ' XNT';
+                    document.getElementById('volume24h').textContent = formatNumber(data.token1_volume_24h || 0);
+                    document.getElementById('holders').textContent = (data.lp_token_holder_count || 0).toLocaleString();
+                }
+            } catch (error) {
+                console.error('Failed to fetch pool data:', error);
+            }
+        }
+        
+        // ============================================================================
+        // TRADE STREAM CONNECTION
+        // ============================================================================
+        
+        function connectTradeStream() {
+            console.log('Connecting to trade stream...');
+            
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.textContent = 'Connecting...';
+            statusEl.className = 'connection-status';
+            
+            eventSource = new EventSource(`${BACKEND_URL}/api/trades-stream`);
+            
+            eventSource.addEventListener('history', (event) => {
+                console.log('Received trade history');
+                const tradesHistory = JSON.parse(event.data);
+                
+                const feedEl = document.getElementById('tradesFeed');
+                feedEl.innerHTML = '';
+                
+                tradesHistory.forEach(trade => {
+                    processTrade(trade);
+                    addTradeToFeed(trade, false);
+                });
+                
+                statusEl.textContent = `Connected - ${tradesHistory.length} trades loaded`;
+                statusEl.className = 'connection-status connected';
+                
+                updateStats();
+            });
+            
+            eventSource.addEventListener('trade', (event) => {
+                console.log('New trade received');
+                const trade = JSON.parse(event.data);
+                processTrade(trade);
+                addTradeToFeed(trade, true);
+                updateStats();
+            });
+            
+            eventSource.onerror = () => {
+                console.error('Trade stream error');
+                statusEl.textContent = 'Disconnected - Reconnecting...';
+                statusEl.className = 'connection-status disconnected';
+                eventSource.close();
+                setTimeout(connectTradeStream, 3000);
+            };
+        }
+        
+        function processTrade(trade) {
+            trades.unshift(trade);
+            if (trades.length > 200) trades.pop();
+            
+            // Update stats
+            if (trade.trade_type === 'buy') {
+                stats.buys++;
+                stats.buyVolume += trade.native_amount;
+            } else {
+                stats.sells++;
+                stats.sellVolume += trade.native_amount;
+            }
+            
+            stats.lastTradePrice = trade.price;
+            stats.lastTradeTime = trade.timestamp;
+            stats.lastTrader = trade.trader_prefix;
+            
+            // Add to price chart
+            addPricePoint(trade.price, trade.timestamp);
+        }
+        
+        function addTradeToFeed(trade, prepend = false) {
+            const feedEl = document.getElementById('tradesFeed');
+            
+            const tradeEl = document.createElement('div');
+            tradeEl.className = `trade-item ${trade.trade_type}`;
+            tradeEl.innerHTML = `
+                <div class="trade-header">
+                    <span class="trade-type ${trade.trade_type}">${trade.trade_type.toUpperCase()}</span>
+                    <span class="trade-time">${formatTime(trade.timestamp)}</span>
+                </div>
+                <div class="trade-details">
+                    <span class="trade-amount">${formatNumber(trade.token_amount, 0)} PEPE</span> for 
+                    <span class="trade-amount">${trade.native_amount.toFixed(4)} XNT</span>
+                    <br>
+                    Price: ${formatPrice(trade.price)} · 
+                    Trader: <span style="color: var(--neon-blue);">${trade.trader_prefix}</span> · 
+                    <a href="${EXPLORER_BASE}/tx/${trade.signature}" target="_blank" style="color: var(--neon-pink); text-decoration: none;">
+                        Tx ↗
+                    </a>
+                </div>
+            `;
+            
+            if (prepend) {
+                feedEl.insertBefore(tradeEl, feedEl.firstChild);
+            } else {
+                feedEl.appendChild(tradeEl);
+            }
+            
+            // Keep only last 50 trades in view
+            while (feedEl.children.length > 50) {
+                feedEl.removeChild(feedEl.lastChild);
+            }
+        }
+        
+        function addPricePoint(price, timestamp) {
+            const timeLabel = formatTime(timestamp);
+            
+            priceData.push({ time: timeLabel, price });
+            
+            // Keep last 50 points
+            if (priceData.length > 50) {
+                priceData.shift();
+            }
+            
+            priceChart.data.labels = priceData.map(d => d.time);
+            priceChart.data.datasets[0].data = priceData.map(d => d.price);
+            priceChart.update('none');
+        }
+        
+        function updateStats() {
+            document.getElementById('totalTrades').textContent = (stats.buys + stats.sells).toLocaleString();
+            document.getElementById('buyCount').textContent = stats.buys.toLocaleString();
+            document.getElementById('sellCount').textContent = stats.sells.toLocaleString();
+            document.getElementById('lastTradePrice').textContent = formatPrice(stats.lastTradePrice);
+            document.getElementById('lastTradeTime').textContent = stats.lastTradeTime ? formatTime(stats.lastTradeTime) : '--';
+            document.getElementById('lastTrader').textContent = stats.lastTrader || '--';
+            
+            document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        }
+        
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Dashboard initializing...');
+            
+            initPriceChart();
+            fetchPoolData();
+            connectTradeStream();
+            
+            // Update pool data every 30 seconds
+            setInterval(fetchPoolData, 30000);
+        });
+    </script>
+</body>
+</html>

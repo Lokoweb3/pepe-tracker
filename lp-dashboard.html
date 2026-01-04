@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PEPE/XNT Pool Analytics - X1 Blockchain</title>
+  <link rel="icon" type="image/png" href="x1-pepe-logo.png" />
+
+  <!-- ✅ Lightweight Charts v4 -->
+  <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --neon-green: #00ff88;
+      --pepe-green: #7cb342;
+      --pepe-dark-green: #558b2f;
+      --pepe-light-green: #9ccc65;
+      --neon-blue: #00d4ff;
+      --neon-pink: #ff00ff;
+      --dark-bg: #0a0e1a;
+      --card-bg: #151b2e;
+      --border-color: rgba(124, 179, 66, 0.3);
+      --text-primary: #e8f4f0;
+      --text-secondary: #7a8fa8;
+      --grid-color: rgba(124, 179, 66, 0.1);
+      --buy-color: #7cb342;
+      --sell-color: #ff0055;
+      --pepe-accent: #8bc34a;
+    }
+
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: #0a1208;
+      color: var(--text-primary);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(124, 179, 66, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(139, 195, 74, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 50% 20%, rgba(85, 139, 47, 0.05) 0%, transparent 60%);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124, 179, 66, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124, 179, 66, 0.08) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: fadeInDown 0.8s ease-out;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      animation: fadeIn 1s ease-out;
+    }
+
+    .brand-logo {
+      width: 120px;
+      height: 120px;
+      border-radius: 20px;
+      border: 3px solid var(--pepe-green);
+      box-shadow: 
+        0 0 20px rgba(124, 179, 66, 0.4),
+        0 0 40px rgba(124, 179, 66, 0.2),
+        inset 0 0 20px rgba(124, 179, 66, 0.1);
+      transition: all 0.3s ease;
+      animation: float 3s ease-in-out infinite;
+      background: rgba(124, 179, 66, 0.05);
+    }
+
+    .brand-logo:hover {
+      transform: scale(1.05) rotate(2deg);
+      box-shadow: 
+        0 0 30px rgba(124, 179, 66, 0.6),
+        0 0 60px rgba(139, 195, 74, 0.4),
+        inset 0 0 30px rgba(124, 179, 66, 0.2);
+      border-color: var(--pepe-light-green);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #7cb342, #8bc34a, #9ccc65);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 30px rgba(124, 179, 66, 0.4);
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { filter: drop-shadow(0 0 5px rgba(124, 179, 66, 0.6)); }
+      to   { filter: drop-shadow(0 0 20px rgba(139, 195, 74, 0.9)); }
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 300;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+      animation: fadeIn 1s ease-out 0.3s both;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--pepe-green), var(--pepe-light-green), var(--pepe-accent));
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+    }
+
+    .stat-card:hover::before { transform: scaleX(1); }
+
+    .stat-card:hover {
+      border-color: var(--pepe-green);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 40px rgba(124, 179, 66, 0.25);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--pepe-green);
+      margin-bottom: 8px;
+      text-shadow: 0 0 10px rgba(124, 179, 66, 0.3);
+    }
+
+    .stat-subtext {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 300;
+    }
+
+    .charts-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 40px;
+      animation: fadeIn 1.2s ease-out 0.6s both;
+    }
+
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-card.full-width { grid-column: 1 / -1; }
+
+    .chart-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .chart-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .chart-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+
+    .timeframe-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .timeframe-bar button {
+      background: transparent;
+      border: 1px solid rgba(124, 179, 66, 0.3);
+      color: #7a8fa8;
+      padding: 6px 12px;
+      font-family: 'IBM Plex Mono';
+      font-size: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .timeframe-bar button:hover {
+      color: var(--pepe-green);
+      border-color: var(--pepe-green);
+      background: rgba(124, 179, 66, 0.08);
+      box-shadow: 0 0 8px rgba(124, 179, 66, 0.2);
+    }
+
+    .timeframe-bar button.active {
+      color: var(--pepe-light-green);
+      border-color: var(--pepe-green);
+      background: rgba(124, 179, 66, 0.15);
+      box-shadow: 0 0 16px rgba(124, 179, 66, 0.25);
+    }
+
+    .tv-wrap{
+      width: 100%;
+      height: 520px;
+      display: grid;
+      grid-template-rows: 1fr 160px;
+      gap: 10px;
+    }
+    .tv-pane{
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    /* Ensure the volume pane always has measurable height at chart init */
+    .tv-pane-vol{ opacity: 0.95; min-height: 140px; }
+    .vol-label{
+      position:absolute;
+      left: 12px;
+      top: 10px;
+      font-size: 12px;
+      color: #7a8fa8;
+      z-index: 10;
+      pointer-events: none;
+      background: rgba(10,14,26,0.45);
+      border: 1px solid rgba(0,255,136,0.12);
+      padding: 6px 10px;
+      border-radius: 10px;
+      backdrop-filter: blur(6px);
+    }
+
+    .connection-status {
+      display: inline-block;
+      padding: 8px 16px;
+      background: rgba(124, 179, 66, 0.1);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      font-size: 0.75rem;
+      margin-bottom: 16px;
+    }
+    .connection-status.connected { 
+      border-color: var(--pepe-green); 
+      color: var(--pepe-green);
+      box-shadow: 0 0 10px rgba(124, 179, 66, 0.2);
+    }
+    .connection-status.disconnected { border-color: var(--sell-color); color: var(--sell-color); }
+
+    .trades-feed {
+      max-height: 400px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--neon-green) var(--card-bg);
+    }
+    .trades-feed::-webkit-scrollbar { width: 8px; }
+    .trades-feed::-webkit-scrollbar-track { background: var(--card-bg); }
+    .trades-feed::-webkit-scrollbar-thumb { background: var(--neon-green); border-radius: 4px; }
+
+    .trade-item {
+      padding: 16px;
+      margin-bottom: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      border-left: 3px solid var(--neon-green);
+      transition: all 0.3s ease;
+    }
+    .trade-item.buy { border-left-color: var(--buy-color); }
+    .trade-item.sell { border-left-color: var(--sell-color); }
+
+    /* LP event styling */
+    .trade-item.lp_add { border-left-color: var(--neon-blue); }
+    .trade-item.lp_remove { border-left-color: var(--neon-pink); }
+
+    .trade-type.lp_add { color: var(--neon-blue); }
+    .trade-type.lp_remove { color: var(--neon-pink); }
+
+    
+
+    /* Trade feed filters */
+    .trade-filters {
+      display: flex;
+      gap: 14px;
+      margin: 8px 0 14px;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+
+    .trade-filters label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      user-select: none;
+    }
+
+    .trade-filters input[type="checkbox"] {
+      accent-color: var(--neon-green);
+      cursor: pointer;
+    }
+.trade-item:hover {
+      background: rgba(0, 255, 136, 0.05);
+      transform: translateX(4px);
+    }
+
+    .trade-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .trade-type {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .trade-type.buy { color: var(--buy-color); }
+    .trade-type.sell { color: var(--sell-color); }
+    .trade-time { font-size: 0.75rem; color: var(--text-secondary); }
+
+    .trade-details {
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+    .trade-amount { color: var(--pepe-accent); font-weight: 500; }
+
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      padding: 30px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-color);
+      animation: fadeIn 1.5s ease-out 1s both;
+    }
+
+    .refresh-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 30px;
+      padding: 12px 20px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 1000;
+      animation: fadeIn 1s ease-out;
+    }
+
+    .refresh-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--pepe-green);
+      border-radius: 50%;
+      animation: blink 2s ease-in-out infinite;
+      box-shadow: 0 0 8px rgba(124, 179, 66, 0.6);
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Volume Breakdown Styles */
+    .volume-section {
+      margin-bottom: 40px;
+      animation: fadeIn 1s ease-out 0.4s both;
+    }
+
+    .volume-header {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .volume-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .volume-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .volume-card:hover {
+      border-color: var(--pepe-green);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(124, 179, 66, 0.2);
+    }
+
+    .volume-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--pepe-green), var(--pepe-light-green));
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .volume-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .volume-period {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .volume-total {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--pepe-green);
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(124, 179, 66, 0.3);
+    }
+
+    .volume-breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.75rem;
+    }
+
+    .volume-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .volume-label {
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .volume-value {
+      font-weight: 600;
+    }
+
+    .volume-value.buy {
+      color: var(--buy-color);
+    }
+
+    .volume-value.sell {
+      color: var(--sell-color);
+    }
+
+    .volume-bar-container {
+      width: 100%;
+      height: 4px;
+      background: rgba(0, 212, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .volume-bar {
+      height: 100%;
+      display: flex;
+    }
+
+    .volume-bar-buy {
+      background: var(--buy-color);
+      transition: width 0.5s ease;
+    }
+
+    .volume-bar-sell {
+      background: var(--sell-color);
+      transition: width 0.5s ease;
+    }
+
+    .volume-change {
+      font-size: 0.7rem;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    .volume-change.positive {
+      color: var(--buy-color);
+    }
+
+    .volume-change.negative {
+      color: var(--sell-color);
+    }
+
+    .volume-txs {
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Frog Eating Animation */
+    .frog-animation {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      pointer-events: none;
+      display: none;
+    }
+
+    .frog-animation.active {
+      display: block;
+      animation: frogBounce 2s ease-out forwards;
+    }
+
+    .frog-emoji {
+      font-size: 120px;
+      animation: frogEat 0.5s ease-in-out 3;
+      filter: drop-shadow(0 0 20px rgba(124, 179, 66, 0.8));
+    }
+
+    .fly {
+      position: absolute;
+      font-size: 30px;
+      animation: flyBuzz 0.3s linear infinite;
+    }
+
+    .fly.caught {
+      animation: flyCaught 0.5s ease-out forwards;
+    }
+
+    @keyframes frogBounce {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+      10% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+      }
+      20% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+      90% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+    }
+
+    @keyframes frogEat {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.15);
+      }
+    }
+
+    @keyframes flyBuzz {
+      0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      25% {
+        transform: translate(5px, -5px) rotate(10deg);
+      }
+      50% {
+        transform: translate(-5px, 5px) rotate(-10deg);
+      }
+      75% {
+        transform: translate(5px, 5px) rotate(5deg);
+      }
+    }
+
+    @keyframes flyCaught {
+      0% {
+        transform: scale(1) translate(0, 0);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(0.5) translate(0, 0);
+        opacity: 0.5;
+      }
+      100% {
+        transform: scale(0) translate(0, 0);
+        opacity: 0;
+      }
+    }
+
+    /* Sell notification banner */
+    .sell-notification {
+      position: fixed;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(255, 0, 85, 0.95), rgba(200, 0, 60, 0.95));
+      border: 2px solid #ff0055;
+      border-radius: 20px;
+      padding: 20px 40px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: white;
+      z-index: 9998;
+      box-shadow: 
+        0 10px 40px rgba(255, 0, 85, 0.5),
+        0 0 20px rgba(255, 0, 85, 0.8);
+      pointer-events: none;
+      display: none;
+      text-align: center;
+    }
+
+    .sell-notification.active {
+      display: block;
+      animation: slideDownFade 3s ease-out forwards;
+    }
+
+    @keyframes slideDownFade {
+      0% {
+        transform: translateX(-50%) translateY(-100px);
+        opacity: 0;
+      }
+      10% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+      80% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-50%) translateY(-100px);
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 968px) {
+      .charts-container { grid-template-columns: 1fr; }
+      h1 { font-size: 2.5rem; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .timeframe-bar { justify-content: center; }
+      .chart-title-row { justify-content: center; }
+      .tv-wrap { height: 520px; grid-template-rows: 1fr 140px; }
+      .brand-logo { width: 90px; height: 90px; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Frog Eating Animation -->
+  <div class="frog-animation" id="frogAnimation">
+    <div class="frog-emoji">🐸</div>
+  </div>
+
+  <!-- Sell Notification Banner -->
+  <div class="sell-notification" id="sellNotification"></div>
+
+  <div class="refresh-indicator">
+    <div class="refresh-dot"></div>
+    <span id="lastUpdate">LIVE DATA</span>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="logo-container">
+        <img src="x1-pepe-logo.png" alt="X1 PEPE Logo" class="brand-logo" />
+      </div>
+      <h1>🐸 PEPE/XNT Pool 🐸</h1>
+      <p class="subtitle">🚀 Real-Time Frog Finance Dashboard 🚀</p>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Liquidity (XNT)</div>
+        <div class="stat-value" id="totalXNT">--</div>
+        <div class="stat-subtext">WXNT Token Reserve</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Total Liquidity (PEPE)</div>
+        <div class="stat-value" id="totalPEPE">--</div>
+        <div class="stat-subtext">PEPE Token Reserve</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Current Price</div>
+        <div class="stat-value" id="currentPrice">--</div>
+        <div class="stat-subtext">XNT per PEPE</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Market Cap</div>
+        <div class="stat-value" id="marketCap">--</div>
+        <div class="stat-subtext">Based on 69.42B Supply</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">24h Volume</div>
+        <div class="stat-value" id="volume24h">--</div>
+        <div class="stat-subtext" id="volumeSubtext">XNT Traded</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Total Trades</div>
+        <div class="stat-value" id="totalTrades">--</div>
+        <div class="stat-subtext"><span id="buyCount">--</span> Buys · <span id="sellCount">--</span> Sells</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">LP Token Holders</div>
+        <div class="stat-value" id="holders">--</div>
+        <div class="stat-subtext">Liquidity Providers</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Last Trade</div>
+        <div class="stat-value" id="lastTradePrice">--</div>
+        <div class="stat-subtext" id="lastTradeTime">--</div>
+        <div class="stat-subtext" style="margin-top: 4px; color: var(--neon-blue);">
+          👤 <span id="lastTrader">--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Volume Breakdown Section -->
+    <div class="volume-section">
+      <h2 class="volume-header">🐸 Volume Analytics</h2>
+      <div class="volume-grid">
+        <div class="volume-card">
+          <div class="volume-period">5 Minutes</div>
+          <div class="volume-total" id="vol5m">$0</div>
+          <div class="volume-breakdown">
+            <div class="volume-row">
+              <span class="volume-label">Buys</span>
+              <span class="volume-value buy" id="vol5m-buy">$0</span>
+            </div>
+            <div class="volume-row">
+              <span class="volume-label">Sells</span>
+              <span class="volume-value sell" id="vol5m-sell">$0</span>
+            </div>
+          </div>
+          <div class="volume-bar-container">
+            <div class="volume-bar">
+              <div class="volume-bar-buy" id="vol5m-bar-buy" style="width: 50%"></div>
+              <div class="volume-bar-sell" id="vol5m-bar-sell" style="width: 50%"></div>
+            </div>
+          </div>
+          <div class="volume-txs" id="vol5m-txs">0 txns</div>
+        </div>
+
+        <div class="volume-card">
+          <div class="volume-period">1 Hour</div>
+          <div class="volume-total" id="vol1h">$0</div>
+          <div class="volume-breakdown">
+            <div class="volume-row">
+              <span class="volume-label">Buys</span>
+              <span class="volume-value buy" id="vol1h-buy">$0</span>
+            </div>
+            <div class="volume-row">
+              <span class="volume-label">Sells</span>
+              <span class="volume-value sell" id="vol1h-sell">$0</span>
+            </div>
+          </div>
+          <div class="volume-bar-container">
+            <div class="volume-bar">
+              <div class="volume-bar-buy" id="vol1h-bar-buy" style="width: 50%"></div>
+              <div class="volume-bar-sell" id="vol1h-bar-sell" style="width: 50%"></div>
+            </div>
+          </div>
+          <div class="volume-txs" id="vol1h-txs">0 txns</div>
+        </div>
+
+        <div class="volume-card">
+          <div class="volume-period">6 Hours</div>
+          <div class="volume-total" id="vol6h">$0</div>
+          <div class="volume-breakdown">
+            <div class="volume-row">
+              <span class="volume-label">Buys</span>
+              <span class="volume-value buy" id="vol6h-buy">$0</span>
+            </div>
+            <div class="volume-row">
+              <span class="volume-label">Sells</span>
+              <span class="volume-value sell" id="vol6h-sell">$0</span>
+            </div>
+          </div>
+          <div class="volume-bar-container">
+            <div class="volume-bar">
+              <div class="volume-bar-buy" id="vol6h-bar-buy" style="width: 50%"></div>
+              <div class="volume-bar-sell" id="vol6h-bar-sell" style="width: 50%"></div>
+            </div>
+          </div>
+          <div class="volume-txs" id="vol6h-txs">0 txns</div>
+        </div>
+
+        <div class="volume-card">
+          <div class="volume-period">24 Hours</div>
+          <div class="volume-total" id="vol24h">$0</div>
+          <div class="volume-breakdown">
+            <div class="volume-row">
+              <span class="volume-label">Buys</span>
+              <span class="volume-value buy" id="vol24h-buy">$0</span>
+            </div>
+            <div class="volume-row">
+              <span class="volume-label">Sells</span>
+              <span class="volume-value sell" id="vol24h-sell">$0</span>
+            </div>
+          </div>
+          <div class="volume-bar-container">
+            <div class="volume-bar">
+              <div class="volume-bar-buy" id="vol24h-bar-buy" style="width: 50%"></div>
+              <div class="volume-bar-sell" id="vol24h-bar-sell" style="width: 50%"></div>
+            </div>
+          </div>
+          <div class="volume-txs" id="vol24h-txs">0 txns</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-container">
+      <div class="chart-card full-width">
+        <div class="chart-title-row">
+          <div>
+            <div class="chart-title">Price Chart (Candles)</div>
+            <div class="chart-subtitle">
+              Timeframe: <span id="tfLabel">15m</span> · OHLC + Volume
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center;">
+            <div class="timeframe-bar" id="timeframeBar">
+              <button data-tf="1s">1s</button>
+              <button data-tf="1m">1m</button>
+              <button data-tf="5m">5m</button>
+              <button data-tf="15m" class="active">15m</button>
+              <button data-tf="1h">1h</button>
+              <button data-tf="4h">4h</button>
+              <button data-tf="1d">1d</button>
+              <button data-tf="3d">3d</button>
+              <button data-tf="1w">1w</button>
+              <button data-tf="1M">1M</button>
+            </div>
+
+            <div class="timeframe-bar" id="toolsBar">
+              <button id="btnReset">Reset</button>
+              <button id="btnLog">Log</button>
+              <button id="btnRuler">Ruler</button>
+              <button id="btnHL">H/L</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tv-wrap">
+          <div id="tvChartPrice" class="tv-pane"></div>
+          <div id="tvChartVol" class="tv-pane tv-pane-vol">
+            <div class="vol-label" id="volLabel">Volume (XNT)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card full-width">
+        <h3 class="chart-title">🐸 Live Trades Feed</h3>
+        <div class="trade-filters" id="tradeFilters">
+          <label><input type="checkbox" data-type="buy" checked> BUY</label>
+          <label><input type="checkbox" data-type="sell" checked> SELL</label>
+          <label><input type="checkbox" data-type="lp_add" checked> LP ADD</label>
+          <label><input type="checkbox" data-type="lp_remove" checked> LP REMOVE</label>
+        </div>
+
+        <div class="connection-status" id="connectionStatus">Connecting...</div>
+        <div class="trades-feed" id="tradesFeed">
+          <div style="text-align:center; padding:40px; color:#7a8fa8; font-size:0.9rem;">
+            Connecting to blockchain...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>🐸 Real-time blockchain analytics for PEPE/XNT on X1 Blockchain 🐸</p>
+      <p style="margin-top: 10px; font-size: 0.75rem;">
+        📡 Data Source: Direct Blockchain via RPC |
+        Pool: VmZfZnHzFTKSf19ZvAxa4duzChve3JYHVCPq1FvezhN
+      </p>
+      <p style="margin-top: 10px; font-size: 0.7rem; color: var(--pepe-green);">
+        Feels Good Man 🐸
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // ============================================================================
+    // CONFIGURATION
+    // ============================================================================
+
+    const BACKEND_URL = window.location.protocol === 'file:'
+      ? 'http://localhost:3000'
+      : window.location.origin;
+
+    const POOL_API_URL = window.location.protocol === 'file:'
+      ? `${BACKEND_URL}/api/pool`
+      : `/api/pool`;
+
+    const TOTAL_SUPPLY = 69_420_000_000;
+    const EXPLORER_BASE = 'https://explorer.mainnet.x1.xyz';
+
+    const TIMEFRAMES = {
+      "1s": 1_000,
+      "1m": 60_000,
+      "5m": 300_000,
+      "15m": 900_000,
+      "1h": 3_600_000,
+      "4h": 14_400_000,
+      "1d": 86_400_000,
+      "3d": 259_200_000,
+      "1w": 604_800_000,
+      "1M": 2_592_000_000
+    };
+
+    let currentTimeframe = "15m";
+
+    // ✅ Align chart time to the viewer’s local system clock
+    // We compute this from newest trade on initial history load (or first live trade)
+    let timeOffsetMs = 0;
+
+    // ============================================================================
+    // STATE
+    // ============================================================================
+
+    let eventSource = null;
+    let rawTrades = [];
+
+    let tvChart = null;
+    let volumeChart = null;
+    let candleSeries = null;
+    let volumeSeries = null;
+
+    let rebuildScheduled = false;
+
+    let stats = {
+      buys: 0,
+      sells: 0,
+      buyVolume: 0,
+      sellVolume: 0,
+      lastTradePrice: 0,
+      lastTradeTime: null,
+      lastTrader: null
+    };
+
+    // Feed filter state (Live Trades Feed)
+    const tradeFeedFilters = {
+      buy: true,
+      sell: true,
+      lp_add: true,
+      lp_remove: true,
+    };
+
+    // Volume analytics state
+    let volumeMetrics = {
+      '5m': { buy: 0, sell: 0, txns: 0 },
+      '1h': { buy: 0, sell: 0, txns: 0 },
+      '6h': { buy: 0, sell: 0, txns: 0 },
+      '24h': { buy: 0, sell: 0, txns: 0 }
+    };
+
+
+    // Tools / overlays
+    let isLogScale = false;
+
+    let lastPriceLine = null;
+    let hiLine = null;
+    let loLine = null;
+
+    let rulerMode = false;
+    let rulerStart = null;
+    let rulerOverlay = null;
+
+    // ============================================================================
+    // UTILS
+    // ============================================================================
+
+    function formatNumber(num, decimals = 2) {
+      if (num === null || num === undefined || Number.isNaN(num)) return '--';
+      if (num === 0) return '0';
+      const n = Number(num);
+      if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(decimals) + 'B';
+      if (n >= 1_000_000) return (n / 1_000_000).toFixed(decimals) + 'M';
+      if (n >= 1_000) return (n / 1_000).toFixed(decimals) + 'K';
+      return n.toFixed(decimals);
+    }
+
+    function formatPrice(price) {
+      if (!price || price === 0) return '--';
+      const p = Number(price);
+      if (!isFinite(p) || p <= 0) return '--';
+      if (p < 0.000001) return p.toExponential(4);
+      if (p < 0.001) return p.toFixed(9);
+      return p.toFixed(6);
+    }
+
+    function formatTime(timestampMs) {
+      const date = new Date(timestampMs);
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+
+
+    function applyTradeFeedFilters() {
+      const feedEl = document.getElementById("tradesFeed");
+      if (!feedEl) return;
+
+      Array.from(feedEl.children).forEach((el) => {
+        const type = el.dataset.tradeType;
+        if (!type) return;
+        el.style.display = tradeFeedFilters[type] ? "" : "none";
+      });
+    }
+
+    function scheduleRebuild() {
+      if (rebuildScheduled) return;
+      rebuildScheduled = true;
+      requestAnimationFrame(() => {
+        rebuildScheduled = false;
+        rebuildCandles();
+      });
+    }
+
+    function getMaxCandles(tfKey) {
+      if (tfKey === "1s") return 240;
+      if (tfKey === "1m") return 360;
+      if (tfKey === "5m") return 288;
+      if (tfKey === "15m") return 288;
+      if (tfKey === "1h") return 240;
+      if (tfKey === "4h") return 240;
+      if (tfKey === "1d") return 180;
+      if (tfKey === "3d") return 180;
+      if (tfKey === "1w") return 156;
+      if (tfKey === "1M") return 120;
+      return 240;
+    }
+
+    // ============================================================================
+    // CHART (Two panels: Price top, Volume bottom)
+    // Improved scaling + ruler tool + log/linear toggle
+    // ============================================================================
+
+    let tipEl = null;
+
+    function makeTimeFormatter() {
+      return (timeSec) => {
+        // LightweightCharts passes unix seconds; we align to local clock via offset
+        const d = new Date((timeSec * 1000) + timeOffsetMs);
+        if (currentTimeframe === "1d" || currentTimeframe === "3d" || currentTimeframe === "1w" || currentTimeframe === "1M") {
+          return d.toLocaleDateString();
+        }
+        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      };
+    }
+
+    function applyPriceScaleMode() {
+      if (!tvChart) return;
+      tvChart.applyOptions({
+        rightPriceScale: {
+          mode: isLogScale
+            ? LightweightCharts.PriceScaleMode.Logarithmic
+            : LightweightCharts.PriceScaleMode.Normal,
+          autoScale: true,
+          scaleMargins: { top: 0.12, bottom: 0.20 },
+          borderColor: "rgba(0, 255, 136, 0.18)",
+        },
+      });
+      tvChart.timeScale().applyOptions({ rightOffset: 2 });
+    }
+
+    function ensureRulerOverlay() {
+      if (rulerOverlay) return;
+      const elPrice = document.getElementById("tvChartPrice");
+      if (!elPrice) return;
+
+      rulerOverlay = document.createElement("div");
+      rulerOverlay.style.position = "absolute";
+      rulerOverlay.style.left = "0";
+      rulerOverlay.style.top = "0";
+      rulerOverlay.style.right = "0";
+      rulerOverlay.style.bottom = "0";
+      rulerOverlay.style.pointerEvents = "none";
+      rulerOverlay.style.zIndex = "15";
+      elPrice.appendChild(rulerOverlay);
+    }
+
+    function clearRulerOverlay() {
+      if (!rulerOverlay) return;
+      rulerOverlay.innerHTML = "";
+    }
+
+    function drawRulerBox(x1, y1, x2, y2, label) {
+      if (!rulerOverlay) return;
+      rulerOverlay.innerHTML = "";
+
+      const left = Math.min(x1, x2);
+      const top = Math.min(y1, y2);
+      const width = Math.abs(x2 - x1);
+      const height = Math.abs(y2 - y1);
+
+      const box = document.createElement("div");
+      box.style.position = "absolute";
+      box.style.left = `${left}px`;
+      box.style.top = `${top}px`;
+      box.style.width = `${width}px`;
+      box.style.height = `${height}px`;
+      box.style.border = "1px solid rgba(0,255,136,0.55)";
+      box.style.background = "rgba(0,255,136,0.06)";
+      box.style.borderRadius = "10px";
+
+      const tag = document.createElement("div");
+      tag.style.position = "absolute";
+      tag.style.left = `${left + 8}px`;
+      tag.style.top = `${top + 8}px`;
+      tag.style.padding = "8px 10px";
+      tag.style.borderRadius = "10px";
+      tag.style.background = "rgba(10,14,26,0.82)";
+      tag.style.border = "1px solid rgba(0,255,136,0.22)";
+      tag.style.color = "#e8f4f0";
+      tag.style.fontSize = "12px";
+      tag.style.lineHeight = "1.4";
+      tag.innerHTML = label;
+
+      rulerOverlay.appendChild(box);
+      rulerOverlay.appendChild(tag);
+    }
+
+    function renderRuler(a, b) {
+      const dPrice = b.price - a.price;
+      const pct = a.price ? (dPrice / a.price) * 100 : 0;
+
+      const t1 = (typeof a.time === "number") ? a.time : a.time.timestamp;
+      const t2 = (typeof b.time === "number") ? b.time : b.time.timestamp;
+
+      const dtSec = Math.abs(t2 - t1);
+      const dtMin = dtSec / 60;
+
+      const label = `
+        <div style="color:#7a8fa8">Measure</div>
+        <div>Δ Price: <span style="color:${dPrice>=0 ? "#00ff88" : "#ff0055"}">${Number(dPrice).toPrecision(6)}</span></div>
+        <div>Δ %: <span style="color:${dPrice>=0 ? "#00ff88" : "#ff0055"}">${Number(pct).toFixed(2)}%</span></div>
+        <div>Δ Time: <span style="color:#00d4ff">${dtMin >= 60 ? (dtMin/60).toFixed(2)+"h" : dtMin.toFixed(1)+"m"}</span></div>
+      `;
+
+      drawRulerBox(a.x, a.y, b.x, b.y, label);
+    }
+
+    function setupRulerEvents() {
+      if (!tvChart || !candleSeries) return;
+
+      tvChart.subscribeClick((param) => {
+        if (!rulerMode) return;
+        if (!param || param.point == null || param.time == null) return;
+
+        const price = candleSeries.coordinateToPrice(param.point.y);
+        if (price == null) return;
+
+        if (!rulerStart) {
+          rulerStart = { time: param.time, price, x: param.point.x, y: param.point.y };
+        } else {
+          const end = { time: param.time, price, x: param.point.x, y: param.point.y };
+          renderRuler(rulerStart, end);
+          rulerStart = null;
+        }
+      });
+
+      tvChart.subscribeCrosshairMove((param) => {
+        if (!rulerMode) return;
+        if (!rulerStart) return;
+        if (!param || param.point == null || param.time == null) return;
+
+        const price = candleSeries.coordinateToPrice(param.point.y);
+        if (price == null) return;
+
+        const end = { time: param.time, price, x: param.point.x, y: param.point.y };
+        renderRuler(rulerStart, end);
+      });
+    }
+
+    function updatePriceLinesFromLastCandle(candles) {
+      if (!candleSeries || !candles || !candles.length) return;
+      const last = candles[candles.length - 1];
+      const lastPx = last.close;
+
+      if (!lastPriceLine) {
+        lastPriceLine = candleSeries.createPriceLine({
+          price: lastPx,
+          color: "rgba(0, 255, 136, 0.75)",
+          lineWidth: 1,
+          lineStyle: 2,
+          axisLabelVisible: true,
+          title: "Last",
+        });
+      } else {
+        lastPriceLine.applyOptions({ price: lastPx });
+      }
+    }
+
+    function drawVisibleHighLow() {
+      if (!tvChart || !candleSeries) return;
+      const candles = rebuildCandles.lastCandles || [];
+      if (candles.length < 2) return;
+
+      const range = tvChart.timeScale().getVisibleLogicalRange();
+      if (!range) return;
+
+      const from = Math.max(0, Math.floor(range.from));
+      const to = Math.min(candles.length - 1, Math.ceil(range.to));
+
+      let hi = -Infinity, lo = Infinity;
+      for (let i = from; i <= to; i++) {
+        const c = candles[i];
+        if (!c) continue;
+        hi = Math.max(hi, c.high);
+        lo = Math.min(lo, c.low);
+      }
+      if (!isFinite(hi) || !isFinite(lo)) return;
+
+      if (hiLine) { try { candleSeries.removePriceLine(hiLine); } catch(e) {} hiLine = null; }
+      if (loLine) { try { candleSeries.removePriceLine(loLine); } catch(e) {} loLine = null; }
+
+      hiLine = candleSeries.createPriceLine({
+        price: hi,
+        color: "rgba(0,212,255,0.65)",
+        lineWidth: 1,
+        lineStyle: 0,
+        axisLabelVisible: true,
+        title: "High",
+      });
+
+      loLine = candleSeries.createPriceLine({
+        price: lo,
+        color: "rgba(255,0,85,0.55)",
+        lineWidth: 1,
+        lineStyle: 0,
+        axisLabelVisible: true,
+        title: "Low",
+      });
+    }
+
+    function initTVChart() {
+      const elPrice = document.getElementById("tvChartPrice");
+      const elVol = document.getElementById("tvChartVol");
+      if (!elPrice || !elVol) return;
+
+      if (typeof LightweightCharts === "undefined" || !LightweightCharts.createChart) {
+        console.error("LightweightCharts not loaded. Check script tag.");
+        return;
+      }
+
+      const baseTimeScale = {
+        timeVisible: true,
+        secondsVisible: false,
+        rightOffset: 2,
+        barSpacing: 12,
+        minBarSpacing: 6,
+        fixLeftEdge: false,
+        fixRightEdge: false,
+        lockVisibleTimeRangeOnResize: false,
+        borderColor: "rgba(0, 255, 136, 0.18)",
+      };
+
+      tvChart = LightweightCharts.createChart(elPrice, {
+        width: elPrice.clientWidth || 800,
+        height: elPrice.clientHeight || 360,
+        layout: {
+          background: { color: "rgba(0,0,0,0)" },
+          textColor: "#7a8fa8",
+          fontFamily: "IBM Plex Mono",
+        },
+        grid: {
+          vertLines: { color: "rgba(0, 212, 255, 0.08)" },
+          horzLines: { color: "rgba(0, 212, 255, 0.08)" },
+        },
+        rightPriceScale: {
+          borderColor: "rgba(0, 255, 136, 0.18)",
+          scaleMargins: { top: 0.12, bottom: 0.20 },
+          autoScale: true,
+          mode: isLogScale ? LightweightCharts.PriceScaleMode.Logarithmic : LightweightCharts.PriceScaleMode.Normal,
+        },
+        timeScale: baseTimeScale,
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+          vertLine: { color: "rgba(255,255,255,0.14)", width: 1 },
+          horzLine: { color: "rgba(255,255,255,0.14)", width: 1 },
+        },
+        handleScroll: true,
+        handleScale: true,
+        localization: { timeFormatter: makeTimeFormatter() },
+      });
+
+      candleSeries = tvChart.addCandlestickSeries({
+        upColor: "rgba(124, 179, 66, 1)",
+        downColor: "rgba(255, 0, 85, 1)",
+        borderUpColor: "rgba(139, 195, 74, 1)",
+        borderDownColor: "rgba(255, 0, 85, 1)",
+        wickUpColor: "rgba(124, 179, 66, 1)",
+        wickDownColor: "rgba(255, 0, 85, 1)",
+      });
+
+      candleSeries.applyOptions({
+        priceFormat: { type: "price", precision: 10, minMove: 0.0000000001 },
+      });
+
+      volumeChart = LightweightCharts.createChart(elVol, {
+        width: elVol.clientWidth || 800,
+        height: elVol.clientHeight || 160,
+        layout: {
+          background: { color: "rgba(0,0,0,0)" },
+          textColor: "#7a8fa8",
+          fontFamily: "IBM Plex Mono",
+        },
+        grid: {
+          vertLines: { color: "rgba(0, 212, 255, 0.06)" },
+          horzLines: { color: "rgba(0, 212, 255, 0.06)" },
+        },
+        rightPriceScale: {
+          visible: true,
+          borderColor: "rgba(0, 255, 136, 0.18)",
+          scaleMargins: { top: 0.10, bottom: 0.10 },
+          mode: LightweightCharts.PriceScaleMode.Normal,
+        },
+        leftPriceScale: {
+          visible: false,
+        },
+        timeScale: { ...baseTimeScale, visible: false },
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+          vertLine: { color: "rgba(255,255,255,0.14)", width: 1 },
+          horzLine: { color: "rgba(255,255,255,0.14)", width: 1 },
+        },
+        handleScroll: false,
+        handleScale: false,
+      });
+
+      volumeSeries = volumeChart.addHistogramSeries({
+        color: "rgba(0, 255, 136, 0.5)",
+        priceFormat: { type: "volume" },
+        priceScaleId: "",
+        base: 0,
+      });
+
+      // Tooltip box
+      tipEl = document.createElement("div");
+      tipEl.style.position = "absolute";
+      tipEl.style.left = "12px";
+      tipEl.style.top = "12px";
+      tipEl.style.padding = "10px 12px";
+      tipEl.style.borderRadius = "10px";
+      tipEl.style.border = "1px solid rgba(0,255,136,0.22)";
+      tipEl.style.background = "rgba(10,14,26,0.72)";
+      tipEl.style.backdropFilter = "blur(6px)";
+      tipEl.style.fontSize = "12px";
+      tipEl.style.color = "#e8f4f0";
+      tipEl.style.pointerEvents = "none";
+      tipEl.style.zIndex = "10";
+      tipEl.style.lineHeight = "1.5";
+      tipEl.innerHTML = "Waiting for real trades…";
+      elPrice.appendChild(tipEl);
+
+      tvChart.subscribeCrosshairMove((param) => {
+        if (!param || !param.time || !param.seriesData) return;
+
+        const c = param.seriesData.get(candleSeries);
+        if (!c) return;
+
+        const timeStr =
+          typeof param.time === "object" && param.time.year
+            ? `${param.time.year}-${String(param.time.month).padStart(2, "0")}-${String(param.time.day).padStart(2, "0")}`
+            : new Date((param.time * 1000) + timeOffsetMs).toLocaleString(); // ✅ FIX: apply offset
+
+        tipEl.innerHTML = `
+          <div style="color:#7a8fa8">${timeStr}</div>
+          <div>O: <span style="color:#00ff88">${c.open}</span>
+              H: <span style="color:#00ff88">${c.high}</span></div>
+          <div>L: <span style="color:#ff0055">${c.low}</span>
+              C: <span style="color:#00ff88">${c.close}</span></div>
+        `;
+      });
+
+      // Sync visible range with null checks
+      const sync = () => {
+        try {
+          const range = tvChart.timeScale().getVisibleRange();
+          if (range && range.from != null && range.to != null) {
+            volumeChart.timeScale().setVisibleRange(range);
+          }
+        } catch (err) {
+          // Silently ignore sync errors during initialization
+        }
+      };
+      tvChart.timeScale().subscribeVisibleTimeRangeChange(sync);
+
+      // Ensure the volume pane starts with a sane range (otherwise bars can render off-screen)
+      try { volumeChart.timeScale().fitContent(); } catch (_) {}
+
+      // Resize
+      const resize = () => {
+        tvChart.applyOptions({ width: elPrice.clientWidth, height: (elPrice.clientHeight || 360) });
+        volumeChart.applyOptions({ width: elVol.clientWidth, height: (elVol.clientHeight || 160) });
+        sync();
+      };
+      window.addEventListener("resize", resize);
+      
+      // Delay initial resize slightly to ensure charts are fully initialized
+      setTimeout(() => {
+        resize();
+      }, 100);
+
+      // Ruler overlay + events
+      ensureRulerOverlay();
+      setupRulerEvents();
+
+      // Fit once on first load
+      rebuildCandles.forceFit = true;
+      applyPriceScaleMode();
+    }
+
+    // ============================================================================
+    // REAL DATA ONLY CANDLES + improved X-axis behavior
+    // ============================================================================
+
+    function applySecondsVisibility() {
+      const showSeconds = (currentTimeframe === "1s" || currentTimeframe === "1m");
+      if (tvChart) tvChart.applyOptions({ timeScale: { secondsVisible: showSeconds } });
+      if (volumeChart) volumeChart.applyOptions({ timeScale: { secondsVisible: showSeconds } });
+      if (tvChart) tvChart.applyOptions({ localization: { timeFormatter: makeTimeFormatter() } });
+    }
+
+    function rebuildCandles() {
+      if (!candleSeries || !volumeSeries || !tvChart || !volumeChart) {
+        console.warn("Charts not initialized, skipping rebuild");
+        return;
+      }
+
+      const bucketSize = TIMEFRAMES[currentTimeframe];
+      if (!bucketSize) {
+        console.warn("Invalid timeframe:", currentTimeframe);
+        return;
+      }
+
+      applySecondsVisibility();
+
+      // Normalize trades and apply system-clock offset
+      const normalized = rawTrades
+        .map(t => {
+          if (!t) return null;
+          const price = Number(t.price);
+          const ts = Number((t.timestamp || 0) + timeOffsetMs); // ✅ apply offset in candle build
+          const vol = Number((t.native_amount ?? t.nativeAmount ?? 0));
+          return { ...t, price, timestamp: ts, native_amount: vol };
+        })
+        .filter(t =>
+          t &&
+          isFinite(t.price) && t.price > 0 &&
+          isFinite(t.timestamp) && t.timestamp > 0
+        );
+
+      // ✅ Outlier guard (prevents 1 dust trade nuking the scale)
+      // Uses 1st–99th percentile of prices
+      let filtered = normalized;
+      if (normalized.length >= 20) {
+        const prices = normalized.map(t => t.price).sort((a, b) => a - b);
+        const pLow = prices[Math.floor(prices.length * 0.01)];
+        const pHigh = prices[Math.floor(prices.length * 0.99)];
+        filtered = normalized.filter(t => t.price >= pLow && t.price <= pHigh);
+      }
+
+      const buckets = new Map();
+
+      for (const t of filtered) {
+        const bucketStart = Math.floor(t.timestamp / bucketSize) * bucketSize;
+        let b = buckets.get(bucketStart);
+
+        if (!b) {
+          b = {
+            time: Math.floor(bucketStart / 1000),
+            open: t.price,
+            high: t.price,
+            low: t.price,
+            close: t.price,
+            volume: 0,
+          };
+          buckets.set(bucketStart, b);
+        } else {
+          b.high = Math.max(b.high, t.price);
+          b.low = Math.min(b.low, t.price);
+          b.close = t.price;
+        }
+
+        b.volume += Number((t.native_amount ?? t.nativeAmount ?? 0));
+      }
+
+      const sortedKeys = [...buckets.keys()].sort((a, b) => a - b);
+
+      if (sortedKeys.length < 2) {
+        candleSeries.setData([]);
+        volumeSeries.setData([]);
+
+        const tfLabel = document.getElementById("tfLabel");
+        if (tfLabel) tfLabel.textContent = `${currentTimeframe} · Not enough trades yet`;
+
+        if (tipEl) tipEl.innerHTML = "Not enough real trades for this timeframe.";
+        rebuildCandles.lastCandles = [];
+        return;
+      }
+
+      const maxCandles = getMaxCandles(currentTimeframe);
+      const end = sortedKeys[sortedKeys.length - 1];
+      const startKey = sortedKeys[Math.max(0, sortedKeys.length - maxCandles)];
+      const start = Math.floor(startKey / bucketSize) * bucketSize;
+
+      const candles = [];
+      const volumes = [];
+      let lastClose = null;
+
+      for (let ms = start; ms <= end; ms += bucketSize) {
+        const b = buckets.get(ms);
+
+        if (b) {
+          lastClose = b.close;
+
+          candles.push({
+            time: b.time,
+            open: b.open,
+            high: b.high,
+            low: b.low,
+            close: b.close,
+          });
+
+          const isUp = b.close >= b.open;
+          const volValue = Number(b.volume);
+          if (isFinite(volValue) && volValue >= 0) {
+            volumes.push({
+              time: b.time,
+              value: volValue,
+              color: isUp ? "rgba(124, 179, 66, 0.6)" : "rgba(255, 0, 85, 0.55)",
+            });
+          }
+        } else if (lastClose !== null) {
+          // gap fill (flat) - only add if we have valid data
+          const tsec = Math.floor(ms / 1000);
+          if (isFinite(tsec) && tsec > 0) {
+            candles.push({ time: tsec, open: lastClose, high: lastClose, low: lastClose, close: lastClose });
+            volumes.push({ time: tsec, value: 0, color: "rgba(124, 179, 66, 0.10)" });
+          }
+        }
+      }
+
+      candleSeries.setData(candles);
+      
+      // Filter out any invalid volume entries before setting
+      const validVolumes = volumes.filter(v => {
+        if (!v) return false;
+        if (!v.time || typeof v.time !== 'number' || !isFinite(v.time) || v.time <= 0) return false;
+        if (v.value == null || typeof v.value !== 'number' || !isFinite(v.value) || v.value < 0) return false;
+        if (!v.color) return false;
+        return true;
+      });
+      
+      console.log(`Setting volume data: ${validVolumes.length} valid bars from ${volumes.length} total`);
+      
+      if (validVolumes.length > 0) {
+        try {
+          volumeSeries.setData(validVolumes);
+          console.log("✓ Volume data set successfully");
+        } catch (err) {
+          console.error("✗ Error setting volume data:", err.message);
+          console.error("Sample data:", validVolumes.slice(0, 3));
+          // Try to recover by clearing the data
+          try {
+            volumeSeries.setData([]);
+          } catch (_) {}
+        }
+      } else {
+        console.warn("No valid volume data to display");
+        volumeSeries.setData([]);
+      }
+
+      rebuildCandles.lastCandles = candles;
+      updatePriceLinesFromLastCandle(candles);
+
+      const tfLabel = document.getElementById("tfLabel");
+      if (tfLabel) tfLabel.textContent = currentTimeframe;
+
+      if (rebuildCandles.forceFit) {
+        tvChart.timeScale().fitContent();
+        rebuildCandles.forceFit = false;
+      }
+
+      // Keep volume chart aligned with price chart.
+      // If the price chart hasn't established a range yet, fall back to fitContent.
+      const range = tvChart.timeScale().getVisibleRange();
+      if (range && range.from != null && range.to != null) {
+        try { 
+          volumeChart.timeScale().setVisibleRange(range); 
+        } catch (err) {
+          // If setVisibleRange fails, try fitContent
+          try { volumeChart.timeScale().fitContent(); } catch (_) {}
+        }
+      } else {
+        try { volumeChart.timeScale().fitContent(); } catch (_) {}
+      }
+    }
+
+    // ============================================================================
+    // POOL DATA
+    // ============================================================================
+
+    async function fetchPoolData() {
+      try {
+        const response = await fetch(POOL_API_URL);
+        const result = await response.json();
+
+        if (result && result.success && result.data) {
+          const data = result.data;
+
+          const xnt = parseFloat(data.amount1) || 0;
+          const pepe = parseFloat(data.amount2) || 0;
+          const price = pepe > 0 ? (xnt / pepe) : 0;
+          const marketCap = price * TOTAL_SUPPLY;
+
+          document.getElementById('totalXNT').textContent = formatNumber(xnt);
+          document.getElementById('totalPEPE').textContent = formatNumber(pepe);
+          document.getElementById('currentPrice').textContent = formatPrice(price);
+          document.getElementById('marketCap').textContent = formatNumber(marketCap) + ' XNT';
+          document.getElementById('volume24h').textContent = formatNumber(data.token1_volume_24h || 0);
+          document.getElementById('holders').textContent = (data.lp_token_holder_count || 0).toLocaleString();
+        }
+      } catch (err) {
+        console.error('Failed to fetch pool data:', err);
+      }
+    }
+
+    // ============================================================================
+    // SSE STREAM
+    // ============================================================================
+
+    function connectTradeStream() {
+      const statusEl = document.getElementById('connectionStatus');
+      statusEl.textContent = 'Connecting...';
+      statusEl.className = 'connection-status';
+
+      const streamUrl = window.location.protocol === 'file:'
+        ? `${BACKEND_URL}/api/trades-stream`
+        : `/api/trades-stream`;
+
+      eventSource = new EventSource(streamUrl);
+
+      // ✅ FIX: sort history so Last Trade is newest after refresh
+      eventSource.addEventListener('history', (event) => {
+        const tradesHistoryRaw = JSON.parse(event.data || "[]");
+
+        // Oldest -> newest for stats accuracy
+        const tradesHistory = tradesHistoryRaw
+          .slice()
+          .filter(t => t && typeof t.timestamp === "number")
+          .sort((a, b) => a.timestamp - b.timestamp);
+
+        // ✅ Sync timestamps to viewer’s local system clock (only if skew is meaningful)
+        if (tradesHistory.length) {
+          const newest = tradesHistory[tradesHistory.length - 1];
+          const diff = Date.now() - newest.timestamp;
+          timeOffsetMs = Math.abs(diff) > 60_000 ? diff : 0;
+
+          // re-apply formatter so axis updates with offset
+          if (tvChart) tvChart.applyOptions({ localization: { timeFormatter: makeTimeFormatter() } });
+        }
+
+        rawTrades = [];
+        stats = { buys: 0, sells: 0, buyVolume: 0, sellVolume: 0, lastTradePrice: 0, lastTradeTime: null, lastTrader: null };
+
+        const feedEl = document.getElementById('tradesFeed');
+        feedEl.innerHTML = '';
+
+        // Build stats/candles in chronological order
+        for (const trade of tradesHistory) {
+          processTrade(trade);
+        }
+
+        // Render feed newest-first
+        for (const trade of tradesHistory.slice().reverse()) {
+          addTradeToFeed(trade, false);
+        }
+
+        statusEl.textContent = `Connected - ${tradesHistory.length} trades loaded`;
+        statusEl.className = 'connection-status connected';
+
+        updateStats();
+
+        rebuildCandles.forceFit = true;
+        scheduleRebuild();
+      });
+
+      // ✅ SINGLE trade listener (fixed duplication)
+      eventSource.addEventListener('trade', (event) => {
+        const trade = JSON.parse(event.data);
+
+        // If history was empty, lock offset from first live trade
+        if (trade?.timestamp && timeOffsetMs === 0) {
+          const diff = Date.now() - trade.timestamp;
+          timeOffsetMs = Math.abs(diff) > 60_000 ? diff : 0;
+          if (tvChart) tvChart.applyOptions({ localization: { timeFormatter: makeTimeFormatter() } });
+        }
+
+        processTrade(trade);
+        addTradeToFeed(trade, true);
+        updateStats();
+        scheduleRebuild();
+      });
+
+      eventSource.onerror = () => {
+        statusEl.textContent = 'Disconnected - Reconnecting...';
+        statusEl.className = 'connection-status disconnected';
+        try { eventSource.close(); } catch (e) {}
+        setTimeout(connectTradeStream, 3000);
+      };
+    }
+
+    // ============================================================================
+    // FROG EATING ANIMATION
+    // ============================================================================
+
+    function triggerFrogAnimation(xntAmount, pepeAmount) {
+      const frogEl = document.getElementById('frogAnimation');
+      const notificationEl = document.getElementById('sellNotification');
+      
+      if (!frogEl || !notificationEl) return;
+
+      // Clear any existing animations
+      frogEl.classList.remove('active');
+      notificationEl.classList.remove('active');
+      
+      // Remove old flies
+      const oldFlies = frogEl.querySelectorAll('.fly');
+      oldFlies.forEach(fly => fly.remove());
+
+      // Create flies based on sell size
+      const numFlies = Math.min(Math.floor(xntAmount / 100), 8); // 1 fly per 100 XNT, max 8
+      
+      for (let i = 0; i < numFlies; i++) {
+        const fly = document.createElement('div');
+        fly.className = 'fly';
+        fly.textContent = '🪰';
+        
+        // Random position around the frog
+        const angle = (Math.PI * 2 * i) / numFlies;
+        const radius = 100 + Math.random() * 50;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        
+        fly.style.left = `calc(50% + ${x}px)`;
+        fly.style.top = `calc(50% + ${y}px)`;
+        fly.style.animationDelay = `${i * 0.1}s`;
+        
+        frogEl.appendChild(fly);
+        
+        // Catch the flies with delay
+        setTimeout(() => {
+          fly.classList.add('caught');
+        }, 500 + (i * 200));
+      }
+
+      // Show notification
+      notificationEl.innerHTML = `
+        <div>🐸 BIG SELL DETECTED! 🐸</div>
+        <div style="font-size: 1rem; margin-top: 8px; font-weight: 400;">
+          ${formatNumber(pepeAmount, 0)} PEPE for ${xntAmount.toFixed(2)} XNT
+        </div>
+      `;
+      
+      // Trigger animations
+      setTimeout(() => {
+        frogEl.classList.add('active');
+        notificationEl.classList.add('active');
+      }, 50);
+
+      // Clean up after animation
+      setTimeout(() => {
+        frogEl.classList.remove('active');
+        const flies = frogEl.querySelectorAll('.fly');
+        flies.forEach(fly => fly.remove());
+      }, 2000);
+    }
+
+    function processTrade(trade) {
+      if (!trade) return;
+
+      const isSwap = (trade.trade_type === "buy" || trade.trade_type === "sell");
+
+      // ✅ Only swaps affect candles
+      if (isSwap) {
+        rawTrades.push(trade);
+        if (rawTrades.length > 8000) rawTrades.shift();
+      }
+
+      // ✅ Only swaps affect stats
+      if (trade.trade_type === "buy") {
+        stats.buys++;
+        stats.buyVolume += (trade.native_amount || 0);
+      } else if (trade.trade_type === "sell") {
+        stats.sells++;
+        stats.sellVolume += (trade.native_amount || 0);
+        
+        // 🐸 Trigger frog eating animation for sells >= 100 XNT
+        if (trade.native_amount >= 100) {
+          triggerFrogAnimation(trade.native_amount, trade.token_amount);
+        }
+      }
+
+      // ✅ "Last Trade" can be swap OR LP event
+      stats.lastTradePrice = trade.price; // may be null for LP events
+      stats.lastTradeTime = trade.timestamp;
+      stats.lastTrader = trade.trader_prefix;
+    }
+
+    function addTradeToFeed(trade, prepend = false) {
+      const feedEl = document.getElementById('tradesFeed');
+
+      const niceType =
+        trade.trade_type === "lp_add" ? "LP ADD" :
+        trade.trade_type === "lp_remove" ? "LP REMOVE" :
+        trade.trade_type.toUpperCase();
+
+      const verb =
+        trade.trade_type === "lp_add" ? "added with" :
+        trade.trade_type === "lp_remove" ? "removed for" :
+        "for";
+
+      const showPrice = (trade.trade_type === "buy" || trade.trade_type === "sell");
+
+      const tradeEl = document.createElement('div');
+      tradeEl.className = `trade-item ${trade.trade_type}`;
+      tradeEl.dataset.tradeType = trade.trade_type;
+      tradeEl.innerHTML = `
+        <div class="trade-header">
+          <span class="trade-type ${trade.trade_type}">${niceType}</span>
+          <span class="trade-time">${formatTime(trade.timestamp || 0)}</span>
+        </div>
+        <div class="trade-details">
+          <span class="trade-amount">${formatNumber(trade.token_amount, 0)} PEPE</span> ${verb}
+          <span class="trade-amount">${(trade.native_amount || 0).toFixed(4)} XNT</span>
+          <br>
+          ${
+            showPrice && trade.price
+              ? `Price: ${formatPrice(trade.price)} · `
+              : `<span style="color:#7a8fa8">Liquidity event</span> · `
+          }
+          Trader: <span style="color: var(--neon-blue);">${trade.trader_prefix}</span> ·
+          <a href="${EXPLORER_BASE}/tx/${trade.signature}" target="_blank" style="color: var(--neon-pink); text-decoration: none;">
+            Tx ↗
+          </a>
+        </div>
+      `;
+
+      if (prepend) feedEl.insertBefore(tradeEl, feedEl.firstChild);
+      else feedEl.appendChild(tradeEl);
+
+      while (feedEl.children.length > 50) feedEl.removeChild(feedEl.lastChild);
+
+      applyTradeFeedFilters();
+    }
+
+    function updateStats() {
+      document.getElementById('totalTrades').textContent = (stats.buys + stats.sells).toLocaleString();
+      document.getElementById('buyCount').textContent = stats.buys.toLocaleString();
+      document.getElementById('sellCount').textContent = stats.sells.toLocaleString();
+      document.getElementById('lastTradePrice').textContent =
+        (stats.lastTradePrice == null ? "LP EVENT" : formatPrice(stats.lastTradePrice));
+      document.getElementById('lastTradeTime').textContent = stats.lastTradeTime
+        ? formatTime((stats.lastTradeTime || 0) + timeOffsetMs)
+        : '--';
+      document.getElementById('lastTrader').textContent = stats.lastTrader || '--';
+      document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+      
+      // Update volume analytics
+      updateVolumeMetrics();
+    }
+
+    function calculateVolumeMetrics() {
+      const now = Date.now();
+      const periods = {
+        '5m': 5 * 60 * 1000,
+        '1h': 60 * 60 * 1000,
+        '6h': 6 * 60 * 60 * 1000,
+        '24h': 24 * 60 * 60 * 1000
+      };
+
+      // Reset metrics
+      volumeMetrics = {
+        '5m': { buy: 0, sell: 0, txns: 0 },
+        '1h': { buy: 0, sell: 0, txns: 0 },
+        '6h': { buy: 0, sell: 0, txns: 0 },
+        '24h': { buy: 0, sell: 0, txns: 0 }
+      };
+
+      // Calculate from rawTrades
+      for (const trade of rawTrades) {
+        if (!trade || !trade.timestamp) continue;
+        
+        const age = now - (trade.timestamp + timeOffsetMs);
+        const vol = Number(trade.native_amount || 0);
+        
+        // Count for each applicable period
+        for (const [period, duration] of Object.entries(periods)) {
+          if (age <= duration) {
+            if (trade.trade_type === 'buy') {
+              volumeMetrics[period].buy += vol;
+            } else if (trade.trade_type === 'sell') {
+              volumeMetrics[period].sell += vol;
+            }
+            volumeMetrics[period].txns++;
+          }
+        }
+      }
+    }
+
+    function updateVolumeMetrics() {
+      calculateVolumeMetrics();
+
+      for (const period of ['5m', '1h', '6h', '24h']) {
+        const data = volumeMetrics[period];
+        const total = data.buy + data.sell;
+        const buyPct = total > 0 ? (data.buy / total) * 100 : 50;
+        const sellPct = total > 0 ? (data.sell / total) * 100 : 50;
+
+        // Update total
+        const totalEl = document.getElementById(`vol${period}`);
+        if (totalEl) {
+          totalEl.textContent = total > 0 ? formatNumber(total, 2) + ' XNT' : '$0';
+        }
+
+        // Update buy volume
+        const buyEl = document.getElementById(`vol${period}-buy`);
+        if (buyEl) {
+          buyEl.textContent = data.buy > 0 ? formatNumber(data.buy, 2) + ' XNT' : '$0';
+        }
+
+        // Update sell volume
+        const sellEl = document.getElementById(`vol${period}-sell`);
+        if (sellEl) {
+          sellEl.textContent = data.sell > 0 ? formatNumber(data.sell, 2) + ' XNT' : '$0';
+        }
+
+        // Update progress bars
+        const buyBarEl = document.getElementById(`vol${period}-bar-buy`);
+        const sellBarEl = document.getElementById(`vol${period}-bar-sell`);
+        if (buyBarEl) buyBarEl.style.width = `${buyPct}%`;
+        if (sellBarEl) sellBarEl.style.width = `${sellPct}%`;
+
+        // Update transaction count
+        const txnsEl = document.getElementById(`vol${period}-txns`);
+        if (txnsEl) {
+          txnsEl.textContent = `${data.txns} txns`;
+        }
+      }
+    }
+
+    // ============================================================================
+    // TIMEFRAME BUTTONS
+    // ============================================================================
+
+    function initTimeframeButtons() {
+      const bar = document.getElementById('timeframeBar');
+      if (!bar) return;
+
+      bar.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          bar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          currentTimeframe = btn.dataset.tf;
+
+          rebuildCandles.forceFit = true;
+          scheduleRebuild();
+        });
+      });
+    }
+
+    // ============================================================================
+    // TOOLS BUTTONS (Reset / Log / Ruler / H-L)
+    // ============================================================================
+
+    function initToolsButtons() {
+      const btnReset = document.getElementById("btnReset");
+      const btnLog = document.getElementById("btnLog");
+      const btnRuler = document.getElementById("btnRuler");
+      const btnHL = document.getElementById("btnHL");
+
+      if (btnReset) {
+        btnReset.addEventListener("click", () => {
+          if (!tvChart) return;
+          tvChart.timeScale().fitContent();
+          rebuildCandles.forceFit = false;
+        });
+      }
+
+      if (btnLog) {
+        btnLog.addEventListener("click", () => {
+          isLogScale = !isLogScale;
+          btnLog.classList.toggle("active", isLogScale);
+          applyPriceScaleMode();
+        });
+      }
+
+      if (btnRuler) {
+        btnRuler.addEventListener("click", () => {
+          rulerMode = !rulerMode;
+          rulerStart = null;
+          btnRuler.classList.toggle("active", rulerMode);
+          ensureRulerOverlay();
+          if (!rulerMode) clearRulerOverlay();
+        });
+      }
+
+      if (btnHL) {
+        btnHL.addEventListener("click", () => {
+          drawVisibleHighLow();
+        });
+      }
+    }
+
+    // ============================================================================
+    // INIT
+    // ============================================================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initTVChart();
+      initTimeframeButtons();
+      initToolsButtons();
+
+      // Trade feed filters (BUY/SELL/LP ADD/LP REMOVE)
+      const filterBox = document.getElementById('tradeFilters');
+      if (filterBox) {
+        filterBox.addEventListener('change', (e) => {
+          const cb = e.target;
+          if (!cb || cb.type !== 'checkbox') return;
+          const type = cb.dataset.type;
+          if (!type) return;
+          tradeFeedFilters[type] = cb.checked;
+          applyTradeFeedFilters();
+        });
+      }
+
+      // Connect to real backend
+      fetchPoolData();
+      connectTradeStream();
+      setInterval(fetchPoolData, 30000);
+    });
+  </script>
+</body>
+</html>
