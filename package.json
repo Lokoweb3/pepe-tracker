@@ -1,18 +1,18 @@
 {
-  "name": "pepe-trade-tracker",
+  "name": "pepe-xnt-tracker",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "PEPE/XNT Pool Analytics Dashboard",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@solana/web3.js": "^1.98.4",
+    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "express": "^5.2.1",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.6.7",
+    "@solana/web3.js": "^1.87.6"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
