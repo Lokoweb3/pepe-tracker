@@ -46,6 +46,74 @@ let tradeHistory = [];
 let tradeIdCounter = 1;
 
 // =============================================================================
+// TOKEN-2022 HOLDER COUNT (cached)
+// =============================================================================
+
+const TOKEN_2022_PROGRAM_ID = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+
+// Cache in memory to avoid hammering RPC
+let holdersCache = {
+  mint: null,
+  holders: 0,
+  totalTokenAccounts: 0,
+  zeroBalanceAccounts: 0,
+  updatedAt: 0
+};
+const HOLDERS_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function readU64LE(buf) {
+  let n = 0n;
+  for (let i = 0; i < 8; i++) {
+    n |= BigInt(buf[i]) << (8n * BigInt(i));
+  }
+  return n;
+}
+
+async function getToken2022HoldersCached(mintStr) {
+  const now = Date.now();
+  if (
+    holdersCache.mint === mintStr &&
+    (now - holdersCache.updatedAt) < HOLDERS_CACHE_TTL_MS
+  ) {
+    return holdersCache;
+  }
+
+  const mintPk = new PublicKey(mintStr);
+
+  // Sanity: mint must exist
+  const mintInfo = await connection.getAccountInfo(mintPk, "confirmed");
+  if (!mintInfo) {
+    throw new Error("Mint account not found on this RPC/network.");
+  }
+
+  const AMOUNT_OFFSET = 64; // u64
+  const accounts = await connection.getProgramAccounts(TOKEN_2022_PROGRAM_ID, {
+    commitment: "confirmed",
+    filters: [{ memcmp: { offset: 0, bytes: mintPk.toBase58() } }],
+    dataSlice: { offset: AMOUNT_OFFSET, length: 8 },
+  });
+
+  let holders = 0;
+  let zero = 0;
+
+  for (const acc of accounts) {
+    const amt = readU64LE(acc.account.data);
+    if (amt > 0n) holders++;
+    else zero++;
+  }
+
+  holdersCache = {
+    mint: mintStr,
+    holders,
+    totalTokenAccounts: accounts.length,
+    zeroBalanceAccounts: zero,
+    updatedAt: now
+  };
+
+  return holdersCache;
+}
+
+// =============================================================================
 // UTIL
 // =============================================================================
 
@@ -115,6 +183,25 @@ app.get("/api/pool", async (req, res) => {
     res.status(500).json({ success: false, error: String(e) });
   }
 });
+
+app.get("/api/holders", async (req, res) => {
+  try {
+    const mint = String(req.query.mint || PEPE_MINT);
+    const data = await getToken2022HoldersCached(mint);
+    res.json({
+      success: true,
+      mint,
+      holders: data.holders,
+      totalTokenAccounts: data.totalTokenAccounts,
+      zeroBalanceAccounts: data.zeroBalanceAccounts,
+      cached: (Date.now() - data.updatedAt) < HOLDERS_CACHE_TTL_MS,
+      updatedAt: data.updatedAt
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: String(e?.message || e) });
+  }
+});
+
 
 app.get("/api/trades-stream", (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
@@ -442,7 +529,11 @@ async function init() {
 
 const server = app.listen(PORT, "0.0.0.0", () => {
   const addr = server.address();
-  console.log("🌐 Server bound:", typeof addr === "string" ? addr : `${addr.address}:${addr.port}`);
+  if (!addr) {
+    console.log("🌐 Server bound: (address unavailable yet)");
+  } else {
+    console.log("🌐 Server bound:", typeof addr === "string" ? addr : `${addr.address}:${addr.port}`);
+  }
   console.log("🌐 Server:", `http://localhost:${PORT}`);
   console.log("📊 Dashboard:", `http://localhost:${PORT}`);
   console.log("📡 Stream:", `http://localhost:${PORT}/api/trades-stream`);
