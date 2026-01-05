@@ -34,6 +34,44 @@
       --pepe-accent: #8bc34a;
     }
 
+
+/* ================= TELEGRAM BUTTON ================= */
+.tg-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--pepe-light-green) !important;
+  text-decoration: none !important;
+  background: linear-gradient(
+    135deg,
+    rgba(124, 179, 66, 0.22),
+    rgba(139, 195, 74, 0.10)
+  );
+  border: 1px solid rgba(124, 179, 66, 0.45);
+  box-shadow:
+    0 0 14px rgba(124, 179, 66, 0.35),
+    inset 0 0 14px rgba(124, 179, 66, 0.08);
+  transition: all 0.25s ease;
+}
+.tg-button:hover {
+  color: var(--neon-green) !important;
+  border-color: var(--neon-green);
+  box-shadow: 0 0 26px rgba(124, 179, 66, 0.65);
+  transform: translateY(-1px);
+}
+.tg-button,
+.tg-button:visited,
+.tg-button:active {
+  color: var(--pepe-light-green) !important;
+}
+
+
     body {
       font-family: 'IBM Plex Mono', monospace;
       background: #0a1208;
@@ -632,6 +670,10 @@
       </div>
       <h1>🐸 PEPE/XNT Pool 🐸</h1>
       <p class="subtitle">🚀 Real-Time Frog Finance Dashboard 🚀</p>
+	  <a href="https://t.me/x1_pepe" target="_blank" class="tg-button">
+  💬 Join Telegram
+</a>
+
     </header>
 
     <div class="stats-grid">
