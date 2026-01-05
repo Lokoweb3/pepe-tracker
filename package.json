@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "description": "PEPE/XNT Pool Analytics Dashboard",
   "main": "server.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "echo \"no build\""
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@solana/web3.js": "^1.87.6",
     "cors": "^2.8.5",
-    "node-fetch": "^2.6.7",
-    "@solana/web3.js": "^1.87.6"
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.7"
   },
   "engines": {
     "node": ">=16.0.0"
