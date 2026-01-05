@@ -607,147 +607,6 @@
       color: var(--text-secondary);
       margin-top: 4px;
     }
-
-    /* Frog Eating Animation */
-    .frog-animation {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 9999;
-      pointer-events: none;
-      display: none;
-    }
-
-    .frog-animation.active {
-      display: block;
-      animation: frogBounce 2s ease-out forwards;
-    }
-
-    .frog-emoji {
-      font-size: 120px;
-      animation: frogEat 0.5s ease-in-out 3;
-      filter: drop-shadow(0 0 20px rgba(124, 179, 66, 0.8));
-    }
-
-    .fly {
-      position: absolute;
-      font-size: 30px;
-      animation: flyBuzz 0.3s linear infinite;
-    }
-
-    .fly.caught {
-      animation: flyCaught 0.5s ease-out forwards;
-    }
-
-    @keyframes frogBounce {
-      0% {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 0;
-      }
-      10% {
-        transform: translate(-50%, -50%) scale(1.2);
-        opacity: 1;
-      }
-      20% {
-        transform: translate(-50%, -50%) scale(1);
-      }
-      90% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-      }
-      100% {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 0;
-      }
-    }
-
-    @keyframes frogEat {
-      0%, 100% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.15);
-      }
-    }
-
-    @keyframes flyBuzz {
-      0%, 100% {
-        transform: translate(0, 0) rotate(0deg);
-      }
-      25% {
-        transform: translate(5px, -5px) rotate(10deg);
-      }
-      50% {
-        transform: translate(-5px, 5px) rotate(-10deg);
-      }
-      75% {
-        transform: translate(5px, 5px) rotate(5deg);
-      }
-    }
-
-    @keyframes flyCaught {
-      0% {
-        transform: scale(1) translate(0, 0);
-        opacity: 1;
-      }
-      50% {
-        transform: scale(0.5) translate(0, 0);
-        opacity: 0.5;
-      }
-      100% {
-        transform: scale(0) translate(0, 0);
-        opacity: 0;
-      }
-    }
-
-    /* Sell notification banner */
-    .sell-notification {
-      position: fixed;
-      top: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(135deg, rgba(255, 0, 85, 0.95), rgba(200, 0, 60, 0.95));
-      border: 2px solid #ff0055;
-      border-radius: 20px;
-      padding: 20px 40px;
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: white;
-      z-index: 9998;
-      box-shadow: 
-        0 10px 40px rgba(255, 0, 85, 0.5),
-        0 0 20px rgba(255, 0, 85, 0.8);
-      pointer-events: none;
-      display: none;
-      text-align: center;
-    }
-
-    .sell-notification.active {
-      display: block;
-      animation: slideDownFade 3s ease-out forwards;
-    }
-
-    @keyframes slideDownFade {
-      0% {
-        transform: translateX(-50%) translateY(-100px);
-        opacity: 0;
-      }
-      10% {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-      }
-      80% {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-      }
-      100% {
-        transform: translateX(-50%) translateY(-100px);
-        opacity: 0;
-      }
-    }
-
     @media (max-width: 968px) {
       .charts-container { grid-template-columns: 1fr; }
       h1 { font-size: 2.5rem; }
@@ -761,15 +620,7 @@
 </head>
 
 <body>
-  <!-- Frog Eating Animation -->
-  <div class="frog-animation" id="frogAnimation">
-    <div class="frog-emoji">🐸</div>
-  </div>
-
-  <!-- Sell Notification Banner -->
-  <div class="sell-notification" id="sellNotification"></div>
-
-  <div class="refresh-indicator">
+<div class="refresh-indicator">
     <div class="refresh-dot"></div>
     <span id="lastUpdate">LIVE DATA</span>
   </div>
@@ -809,9 +660,9 @@
       </div>
 
       <div class="stat-card">
-        <div class="stat-label">24h Volume</div>
+        <div class="stat-label">Pool 24h Volume</div>
         <div class="stat-value" id="volume24h">--</div>
-        <div class="stat-subtext" id="volumeSubtext">XNT Traded</div>
+        <div class="stat-subtext" id="volumeSubtext">From xdex pool API</div>
       </div>
 
       <div class="stat-card">
@@ -907,7 +758,7 @@
         </div>
 
         <div class="volume-card">
-          <div class="volume-period">24 Hours</div>
+          <div class="volume-period">24 Hours (Trades)</div>
           <div class="volume-total" id="vol24h">$0</div>
           <div class="volume-breakdown">
             <div class="volume-row">
@@ -1076,7 +927,6 @@
       '24h': { buy: 0, sell: 0, txns: 0 }
     };
 
-
     // Tools / overlays
     let isLogScale = false;
 
@@ -1120,6 +970,27 @@
       });
     }
 
+    // ✅ Time helpers that respect viewer-local offset
+    function formatTimeWithOffset(timestampMs) {
+      const date = new Date((timestampMs || 0) + timeOffsetMs);
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+
+    function formatDateTimeWithOffset(timestampMs) {
+      const date = new Date((timestampMs || 0) + timeOffsetMs);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
 
     function applyTradeFeedFilters() {
       const feedEl = document.getElementById("tradesFeed");
@@ -1172,6 +1043,28 @@
         return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       };
     }
+
+    function axisTickFormatter(time) {
+      // time can be unix seconds (number) or BusinessDay object
+      if (time == null) return "";
+      // BusinessDay object {year,month,day}
+      if (typeof time === "object" && time.year) {
+        // show date only for business day
+        const d = new Date(Date.UTC(time.year, (time.month || 1) - 1, time.day || 1));
+        // apply offset to keep consistent labeling (convert to local with offset)
+        const dd = new Date(d.getTime() + timeOffsetMs);
+        return dd.toLocaleDateString();
+      }
+      const tSec = Number(time);
+      if (!isFinite(tSec)) return "";
+      const d = new Date((tSec * 1000) + timeOffsetMs);
+      if (currentTimeframe === "1d" || currentTimeframe === "3d" || currentTimeframe === "1w" || currentTimeframe === "1M") {
+        return d.toLocaleDateString();
+      }
+      const showSeconds = (currentTimeframe === "1s" || currentTimeframe === "1m");
+      return d.toLocaleTimeString([], showSeconds ? { hour: "2-digit", minute: "2-digit", second: "2-digit" } : { hour: "2-digit", minute: "2-digit" });
+    }
+
 
     function applyPriceScaleMode() {
       if (!tvChart) return;
@@ -1377,6 +1270,7 @@
         fixLeftEdge: false,
         fixRightEdge: false,
         lockVisibleTimeRangeOnResize: false,
+        tickMarkFormatter: (time, tickMarkType, locale) => axisTickFormatter(time),
         borderColor: "rgba(0, 255, 136, 0.18)",
       };
 
@@ -1544,7 +1438,7 @@
       const showSeconds = (currentTimeframe === "1s" || currentTimeframe === "1m");
       if (tvChart) tvChart.applyOptions({ timeScale: { secondsVisible: showSeconds } });
       if (volumeChart) volumeChart.applyOptions({ timeScale: { secondsVisible: showSeconds } });
-      if (tvChart) tvChart.applyOptions({ localization: { timeFormatter: makeTimeFormatter() } });
+      if (tvChart) tvChart.applyOptions({ localization: { timeFormatter: makeTimeFormatter() }, timeScale: { tickMarkFormatter: (time, tickMarkType, locale) => axisTickFormatter(time) } });
     }
 
     function rebuildCandles() {
@@ -1566,7 +1460,7 @@
         .map(t => {
           if (!t) return null;
           const price = Number(t.price);
-          const ts = Number((t.timestamp || 0) + timeOffsetMs); // ✅ apply offset in candle build
+          const ts = Number(t.timestamp || 0); // ✅ keep raw chain time; offset is applied only in axis/tooltip
           const vol = Number((t.native_amount ?? t.nativeAmount ?? 0));
           return { ...t, price, timestamp: ts, native_amount: vol };
         })
@@ -1784,7 +1678,7 @@
           timeOffsetMs = Math.abs(diff) > 60_000 ? diff : 0;
 
           // re-apply formatter so axis updates with offset
-          if (tvChart) tvChart.applyOptions({ localization: { timeFormatter: makeTimeFormatter() } });
+          if (tvChart) tvChart.applyOptions({ localization: { timeFormatter: makeTimeFormatter() }, timeScale: { tickMarkFormatter: (time, tickMarkType, locale) => axisTickFormatter(time) } });
         }
 
         rawTrades = [];
@@ -1820,7 +1714,7 @@
         if (trade?.timestamp && timeOffsetMs === 0) {
           const diff = Date.now() - trade.timestamp;
           timeOffsetMs = Math.abs(diff) > 60_000 ? diff : 0;
-          if (tvChart) tvChart.applyOptions({ localization: { timeFormatter: makeTimeFormatter() } });
+          if (tvChart) tvChart.applyOptions({ localization: { timeFormatter: makeTimeFormatter() }, timeScale: { tickMarkFormatter: (time, tickMarkType, locale) => axisTickFormatter(time) } });
         }
 
         processTrade(trade);
@@ -1838,71 +1732,6 @@
     }
 
     // ============================================================================
-    // FROG EATING ANIMATION
-    // ============================================================================
-
-    function triggerFrogAnimation(xntAmount, pepeAmount) {
-      const frogEl = document.getElementById('frogAnimation');
-      const notificationEl = document.getElementById('sellNotification');
-      
-      if (!frogEl || !notificationEl) return;
-
-      // Clear any existing animations
-      frogEl.classList.remove('active');
-      notificationEl.classList.remove('active');
-      
-      // Remove old flies
-      const oldFlies = frogEl.querySelectorAll('.fly');
-      oldFlies.forEach(fly => fly.remove());
-
-      // Create flies based on sell size
-      const numFlies = Math.min(Math.floor(xntAmount / 100), 8); // 1 fly per 100 XNT, max 8
-      
-      for (let i = 0; i < numFlies; i++) {
-        const fly = document.createElement('div');
-        fly.className = 'fly';
-        fly.textContent = '🪰';
-        
-        // Random position around the frog
-        const angle = (Math.PI * 2 * i) / numFlies;
-        const radius = 100 + Math.random() * 50;
-        const x = Math.cos(angle) * radius;
-        const y = Math.sin(angle) * radius;
-        
-        fly.style.left = `calc(50% + ${x}px)`;
-        fly.style.top = `calc(50% + ${y}px)`;
-        fly.style.animationDelay = `${i * 0.1}s`;
-        
-        frogEl.appendChild(fly);
-        
-        // Catch the flies with delay
-        setTimeout(() => {
-          fly.classList.add('caught');
-        }, 500 + (i * 200));
-      }
-
-      // Show notification
-      notificationEl.innerHTML = `
-        <div>🐸 BIG SELL DETECTED! 🐸</div>
-        <div style="font-size: 1rem; margin-top: 8px; font-weight: 400;">
-          ${formatNumber(pepeAmount, 0)} PEPE for ${xntAmount.toFixed(2)} XNT
-        </div>
-      `;
-      
-      // Trigger animations
-      setTimeout(() => {
-        frogEl.classList.add('active');
-        notificationEl.classList.add('active');
-      }, 50);
-
-      // Clean up after animation
-      setTimeout(() => {
-        frogEl.classList.remove('active');
-        const flies = frogEl.querySelectorAll('.fly');
-        flies.forEach(fly => fly.remove());
-      }, 2000);
-    }
-
     function processTrade(trade) {
       if (!trade) return;
 
@@ -1921,11 +1750,6 @@
       } else if (trade.trade_type === "sell") {
         stats.sells++;
         stats.sellVolume += (trade.native_amount || 0);
-        
-        // 🐸 Trigger frog eating animation for sells >= 100 XNT
-        if (trade.native_amount >= 100) {
-          triggerFrogAnimation(trade.native_amount, trade.token_amount);
-        }
       }
 
       // ✅ "Last Trade" can be swap OR LP event
@@ -1955,7 +1779,7 @@
       tradeEl.innerHTML = `
         <div class="trade-header">
           <span class="trade-type ${trade.trade_type}">${niceType}</span>
-          <span class="trade-time">${formatTime(trade.timestamp || 0)}</span>
+          <span class="trade-time">${formatTimeWithOffset(trade.timestamp || 0)}</span>
         </div>
         <div class="trade-details">
           <span class="trade-amount">${formatNumber(trade.token_amount, 0)} PEPE</span> ${verb}
@@ -1970,6 +1794,7 @@
           <a href="${EXPLORER_BASE}/tx/${trade.signature}" target="_blank" style="color: var(--neon-pink); text-decoration: none;">
             Tx ↗
           </a>
+                  <div style=\"margin-top:6px; color:#7a8fa8; font-size:0.75rem;\">Occurred: ${formatDateTimeWithOffset(trade.timestamp || 0)}</div>
         </div>
       `;
 
@@ -2069,7 +1894,7 @@
         if (sellBarEl) sellBarEl.style.width = `${sellPct}%`;
 
         // Update transaction count
-        const txnsEl = document.getElementById(`vol${period}-txns`);
+        const txnsEl = document.getElementById(`vol${period}-txs`);
         if (txnsEl) {
           txnsEl.textContent = `${data.txns} txns`;
         }
