@@ -35,41 +35,35 @@
     }
 
 
-/* ================= TELEGRAM BUTTON ================= */
-.tg-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 22px;
-  border-radius: 999px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.75rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--pepe-light-green) !important;
-  text-decoration: none !important;
-  background: linear-gradient(
-    135deg,
-    rgba(124, 179, 66, 0.22),
-    rgba(139, 195, 74, 0.10)
-  );
-  border: 1px solid rgba(124, 179, 66, 0.45);
-  box-shadow:
-    0 0 14px rgba(124, 179, 66, 0.35),
-    inset 0 0 14px rgba(124, 179, 66, 0.08);
-  transition: all 0.25s ease;
-}
-.tg-button:hover {
-  color: var(--neon-green) !important;
-  border-color: var(--neon-green);
-  box-shadow: 0 0 26px rgba(124, 179, 66, 0.65);
-  transform: translateY(-1px);
-}
-.tg-button,
-.tg-button:visited,
-.tg-button:active {
-  color: var(--pepe-light-green) !important;
-}
+    /* ================= TELEGRAM BUTTON ================= */
+    .tg-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--pepe-light-green) !important;
+      text-decoration: none !important;
+      background: linear-gradient(135deg, rgba(124, 179, 66, 0.22), rgba(139, 195, 74, 0.10));
+      border: 1px solid rgba(124, 179, 66, 0.45);
+      box-shadow: 0 0 14px rgba(124, 179, 66, 0.35), inset 0 0 14px rgba(124, 179, 66, 0.08);
+      transition: all 0.25s ease;
+    }
+    .tg-button:hover {
+      color: var(--neon-green) !important;
+      border-color: var(--neon-green);
+      box-shadow: 0 0 26px rgba(124, 179, 66, 0.65);
+      transform: translateY(-1px);
+    }
+    .tg-button,
+    .tg-button:visited,
+    .tg-button:active {
+      color: var(--pepe-light-green) !important;
+    }
 
 
     body {
@@ -714,9 +708,9 @@
       </div>
 
       <div class="stat-card">
-        <div class="stat-label">LP Token Holders</div>
+        <div class="stat-label">Token Holders (PEPE)</div>
         <div class="stat-value" id="holders">--</div>
-        <div class="stat-subtext">Liquidity Providers</div>
+        <div class="stat-subtext">Wallets with balance > 0</div>
       </div>
 
       <div class="stat-card">
@@ -906,6 +900,10 @@
     const POOL_API_URL = window.location.protocol === 'file:'
       ? `${BACKEND_URL}/api/pool`
       : `/api/pool`;
+
+    const HOLDERS_API_URL = window.location.protocol === 'file:'
+      ? `${BACKEND_URL}/api/holders`
+      : `/api/holders`;
 
     const TOTAL_SUPPLY = 69_420_000_000;
     const EXPLORER_BASE = 'https://explorer.mainnet.x1.xyz';
@@ -1663,6 +1661,19 @@
     // POOL DATA
     // ============================================================================
 
+    async function fetchHolders() {
+      try {
+        const r = await fetch(HOLDERS_API_URL);
+        const j = await r.json();
+        if (j && j.success) {
+          const el = document.getElementById('holders');
+          if (el) el.textContent = (j.holders ?? 0).toLocaleString();
+        }
+      } catch (err) {
+        console.error('Failed to fetch holders:', err);
+      }
+    }
+
     async function fetchPoolData() {
       try {
         const response = await fetch(POOL_API_URL);
@@ -1680,9 +1691,7 @@
           document.getElementById('totalPEPE').textContent = formatNumber(pepe);
           document.getElementById('currentPrice').textContent = formatPrice(price);
           document.getElementById('marketCap').textContent = formatNumber(marketCap) + ' XNT';
-          document.getElementById('volume24h').textContent = formatNumber(data.token1_volume_24h || 0);
-          document.getElementById('holders').textContent = (data.lp_token_holder_count || 0).toLocaleString();
-        }
+          document.getElementById('volume24h').textContent = formatNumber(data.token1_volume_24h || 0);        }
       } catch (err) {
         console.error('Failed to fetch pool data:', err);
       }
@@ -2031,8 +2040,10 @@
 
       // Connect to real backend
       fetchPoolData();
+      fetchHolders();
       connectTradeStream();
       setInterval(fetchPoolData, 30000);
+      setInterval(fetchHolders, 10 * 60 * 1000);
     });
   </script>
 </body>
